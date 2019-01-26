@@ -12,11 +12,7 @@ func main() {
 	r.HandleFunc("/health", health)
 	r.HandleFunc("/", helloWorld)
 
-	err := http.ListenAndServe(":80", r)
-	if err != nil {
-		log.Fatal(err)
-
-	}
+	log.Fatal(http.ListenAndServe(":80", r))
 }
 
 func health(w http.ResponseWriter, r *http.Request) {

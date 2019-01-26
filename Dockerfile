@@ -4,6 +4,8 @@ WORKDIR /go/src/github.com/kine-dmd/api/
 
 COPY . .
 
+EXPOSE 80
+
 RUN apk add --no-cache git
 RUN apk add --no-cache gcc
 RUN apk add --no-cache libc-dev
@@ -23,5 +25,3 @@ RUN rm -f **/*_test.go
 RUN go build -o ~/go/bin/main .
 
 ENTRYPOINT ~/go/bin/main
-
-EXPOSE 80
