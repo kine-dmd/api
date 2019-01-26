@@ -1,0 +1,21 @@
+sudo: required
+
+language: go 
+
+go:
+  - "1.11.2"
+
+services:
+  - docker
+
+before_install:
+  - chmod +x deploy.sh
+
+install:
+  - echo "Nothing to install outside of container."
+
+script:
+  - docker build -t kine-dmd-api . $(printenv | grep -E '^IMAGE_' | sed 's/IMAGE_/--build-arg /g')
+
+after_success:
+  ./deploy.sh
