@@ -8,9 +8,14 @@ import (
 	"net/http"
 )
 
-type appleWatch3Data struct {
-	UUID string `json:"UUID"`
-	Data []byte `json:"Data"`
+type unparsedAppleWatch3Data struct {
+	WatchPosition watchPosition `json:"WatchPosition"`
+	RawData       []byte        `json:"RawData"`
+}
+
+type watchPosition struct {
+	PatientID string `json:"PatientID"`
+	Limb      uint8  `json:"Limb"`
 }
 
 const STREAM_NAME = "apple-watch-3"
@@ -47,7 +52,7 @@ func binaryHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// Package the binary data together along with the uuid
-	structuredData := appleWatch3Data{UUID: uuid, Data: data}
+	structuredData := unparsedAppleWatch3Data{WatchPosition: watchPosition{uuid, 1}, RawData: data}
 
 	// Send it to the relevant kinesis queue
 	err = queue.SendToQueue(structuredData, uuid)
