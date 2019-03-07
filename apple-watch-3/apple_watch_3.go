@@ -50,21 +50,21 @@ func binaryHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Entire body is data so read
+	// Entire body is body so read
 	data, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		log.Println("Unable to read body from Apple Watch 3. UUID: ", watchId)
-		http.Error(writer, "Unable to read POST body data", http.StatusUnprocessableEntity)
+		http.Error(writer, "Unable to read POST body body", http.StatusUnprocessableEntity)
 		return
 	}
 
-	// Package the binary data together along with the watchId
+	// Package the binary body together along with the watchId
 	structuredData := unparsedAppleWatch3Data{WatchPosition: watchPosition{watchId, 1}, RawData: data}
 
 	// Send it to the relevant kinesis queue
 	err = queue.SendToQueue(structuredData, watchId)
 	if err != nil {
-		http.Error(writer, "Server unable to forward data", http.StatusInternalServerError)
+		http.Error(writer, "Server unable to forward body", http.StatusInternalServerError)
 	}
 }
 
