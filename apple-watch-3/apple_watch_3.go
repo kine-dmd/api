@@ -45,7 +45,7 @@ func binaryHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// Check there is a body
-	if request.ContentLength == 0 {
+	if request.ContentLength == 0 || request.Body == nil {
 		http.Error(writer, "0 length body.", http.StatusBadRequest)
 		return
 	}
@@ -54,8 +54,11 @@ func binaryHandler(writer http.ResponseWriter, request *http.Request) {
 	data, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		log.Println("Unable to read body from Apple Watch 3. UUID: ", watchId)
-		http.Error(writer, "Unable to read POST body body", http.StatusUnprocessableEntity)
+		http.Error(writer, "Unable to read POST body body", http.StatusBadRequest)
 		return
+	}
+	if data == nil || len(data) == 0 {
+		http.Error(writer, "0 length body.", http.StatusBadRequest)
 	}
 
 	// Package the binary body together along with the watchId
