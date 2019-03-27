@@ -58,6 +58,7 @@ func binaryHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	if data == nil || len(data) == 0 {
 		http.Error(writer, "0 length body.", http.StatusBadRequest)
+		return
 	}
 
 	// Package the binary body together along with the watchId

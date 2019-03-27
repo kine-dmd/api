@@ -20,43 +20,88 @@ func init() {
 }
 
 func TestWrongLengthUUID(t *testing.T) {
+	// Exactly 0 things should be sent to the queue
+	mockCtrl, mockDoer := makeMockQueue(t)
+	mockDoer.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+
 	body := bytes.NewReader([]byte{1, 2, 3})
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/someuuid", body)
 	response := sendRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	mockCtrl.Finish()
 }
 
 func TestUUIDNotBase64(t *testing.T) {
+	// Exactly 0 things should be sent to the queue
+	mockCtrl, mockDoer := makeMockQueue(t)
+	mockDoer.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+
 	body := bytes.NewReader([]byte{1, 2, 3})
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/ZZZZZZZZ-XXXX-YYYY-UUUU-WWWWWWWWWWWW", body)
 	response := sendRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	mockCtrl.Finish()
 }
 
 func TestNilBody(t *testing.T) {
+	// Exactly 0 things should be sent to the queue
+	mockCtrl, mockDoer := makeMockQueue(t)
+	mockDoer.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", nil)
 	response := sendRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	mockCtrl.Finish()
 }
 
 func TestNilBodyWithSetContentLength(t *testing.T) {
+	// Exactly 0 things should be sent to the queue
+	mockCtrl, mockDoer := makeMockQueue(t)
+	mockDoer.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", nil)
 	req.ContentLength = 55
 	response := sendRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	mockCtrl.Finish()
 }
 
 func Test0LenBody(t *testing.T) {
+	// Exactly 0 things should be sent to the queue
+	mockCtrl, mockDoer := makeMockQueue(t)
+	mockDoer.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", bytes.NewReader([]byte{}))
 	response := sendRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	mockCtrl.Finish()
 }
 
 func Test0LenBodyWithSetContentLength(t *testing.T) {
+	// Exactly 0 things should be sent to the queue
+	mockCtrl, mockDoer := makeMockQueue(t)
+	mockDoer.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+
+	// Set a mismatching content length
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", bytes.NewReader([]byte{}))
 	req.ContentLength = 55
 	response := sendRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	mockCtrl.Finish()
+}
+
+func makeMockQueue(t *testing.T) (*gomock.Controller, *mocks.MockKinesisQueueInterface) {
+	// Make a mock for the kinesis queue
+	mockCtrl := gomock.NewController(t)
+	mockDoer := mocks.NewMockKinesisQueueInterface(mockCtrl)
+	queue = mockDoer
+	return mockCtrl, mockDoer
 }
 
 func TestValidUUID(t *testing.T) {
@@ -68,13 +113,8 @@ func TestValidUUIDWithoutDashes(t *testing.T) {
 }
 
 func checkValidUUID(t *testing.T, validUUID string) {
-	// Make a mock for the kinesis queue
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockDoer := mocks.NewMockKinesisQueueInterface(mockCtrl)
-	queue = mockDoer
-
-	// Exactly one thing should be sent to the queue. Partition key should be UUID
+	// Exactly 0 things should be sent to the queue
+	mockCtrl, mockDoer := makeMockQueue(t)
 	mockDoer.EXPECT().SendToQueue(gomock.Any(), validUUID).Return(nil).Times(1)
 
 	// Make and send a request with some data
@@ -82,6 +122,8 @@ func checkValidUUID(t *testing.T, validUUID string) {
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/"+validUUID, body)
 	response := sendRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
+
+	mockCtrl.Finish()
 }
 
 func sendRequest(req *http.Request) *httptest.ResponseRecorder {
