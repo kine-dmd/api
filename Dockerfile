@@ -3,6 +3,7 @@ FROM golang:1.11.2-alpine3.8
 WORKDIR /go/src/github.com/kine-dmd/api/
 
 COPY . .
+RUN rm -rf vendor/ && rm -rf mocks
 
 EXPOSE 80
 
@@ -17,10 +18,13 @@ RUN mv dep /usr/bin/
 
 
 RUN dep ensure
+RUN GOBIN=$PWD/vendor/bin/ go install ./vendor/github.com/golang/mock/mockgen/
 
+RUN mkdir mocks
+RUN vendor/bin/mockgen -destination=mocks/mock_kinesis.go -package=mocks github.com/kine-dmd/api/kinesisqueue KinesisQueueInterface
 RUN go test -v ./...
 
-RUN rm -f **/*_test.go
+RUN rm -f **/*_test.go && rm -rf vendor/bin && rm -rf mocks
 
 RUN go build -o ~/go/bin/main .
 

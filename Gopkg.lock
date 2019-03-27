@@ -8,6 +8,12 @@
   version = "v1.16.26"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/golang/mock"
+  packages = ["gomock","mockgen","mockgen/model"]
+  revision = "2105010f04ec0f4d7a7335a70547be132ebd7b7b"
+
+[[projects]]
   name = "github.com/gorilla/context"
   packages = ["."]
   revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
@@ -30,9 +36,15 @@
   revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
   version = "v1.2.0"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/tools"
+  packages = ["go/ast/astutil","go/gcexportdata","go/internal/gcimporter","go/internal/packagesdriver","go/packages","go/types/typeutil","internal/fastwalk","internal/gopathwalk","internal/semver"]
+  revision = "1d95b17f1b046c395bb6a29c453b501d267151d3"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a9f9df738c85cca209d2d0ebb49f81ea4ad7a2ce2a68ff13947f01ef6264e09a"
+  inputs-digest = "ba851b12cfa10d486d615ca079c58c18bfee2e3e12e21c79ec809ebca69f2480"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -19,12 +19,11 @@ type watchPosition struct {
 	Limb      uint8  `json:"Limb"`
 }
 
-const STREAM_NAME = "apple-watch-3"
-
 var queue kinesisqueue.KinesisQueueInterface = &kinesisqueue.KinesisQueueClient{}
 
 func Init(r *mux.Router) {
 	// Open a kinesis queue connection
+	const STREAM_NAME = "apple-watch-3"
 	err := queue.InitConn(STREAM_NAME)
 	if err != nil {
 		log.Fatal(err)

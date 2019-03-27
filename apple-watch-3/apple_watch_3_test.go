@@ -2,7 +2,9 @@ package apple_watch_3
 
 import (
 	"bytes"
+	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
+	"github.com/kine-dmd/api/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -31,20 +33,6 @@ func TestUUIDNotBase64(t *testing.T) {
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 }
 
-func TestValidUUID(t *testing.T) {
-	body := bytes.NewReader([]byte{1, 2, 3})
-	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", body)
-	response := sendRequest(req)
-	checkResponseCode(t, http.StatusOK, response.Code)
-}
-
-func TestValidUUIDWithoutDashes(t *testing.T) {
-	body := bytes.NewReader([]byte{1, 2, 3})
-	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000000000000000000000000001", body)
-	response := sendRequest(req)
-	checkResponseCode(t, http.StatusOK, response.Code)
-}
-
 func TestNilBody(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", nil)
 	response := sendRequest(req)
@@ -69,6 +57,31 @@ func Test0LenBodyWithSetContentLength(t *testing.T) {
 	req.ContentLength = 55
 	response := sendRequest(req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
+}
+
+func TestValidUUID(t *testing.T) {
+	checkValidUUID(t, "00000000-0000-0000-0000-000000000000")
+}
+
+func TestValidUUIDWithoutDashes(t *testing.T) {
+	checkValidUUID(t, "00000000000000000000000000000000")
+}
+
+func checkValidUUID(t *testing.T, validUUID string) {
+	// Make a mock for the kinesis queue
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockDoer := mocks.NewMockKinesisQueueInterface(mockCtrl)
+	queue = mockDoer
+
+	// Exactly one thing should be sent to the queue. Partition key should be UUID
+	mockDoer.EXPECT().SendToQueue(gomock.Any(), validUUID).Return(nil).Times(1)
+
+	// Make and send a request with some data
+	body := bytes.NewReader([]byte{1, 2, 3})
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/"+validUUID, body)
+	response := sendRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
 }
 
 func sendRequest(req *http.Request) *httptest.ResponseRecorder {
