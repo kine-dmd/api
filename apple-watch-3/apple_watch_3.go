@@ -20,6 +20,7 @@ type watchPosition struct {
 }
 
 var queue kinesisqueue.KinesisQueueInterface = &kinesisqueue.KinesisQueueClient{}
+var watchDB watchPositionDB = &dynamoCachedWatchDB{}
 
 func Init(r *mux.Router) {
 	// Open a kinesis queue connection
@@ -61,8 +62,15 @@ func binaryHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	// Get the watch position
+	position, exists := watchDB.getWatchPosition(watchId)
+	if !exists {
+		http.Error(writer, "Unable to match identifier.", http.StatusBadRequest)
+		return
+	}
+
 	// Package the binary body together along with the watchId
-	structuredData := unparsedAppleWatch3Data{WatchPosition: watchPosition{watchId, 1}, RawData: data}
+	structuredData := unparsedAppleWatch3Data{WatchPosition: position, RawData: data}
 
 	// Send it to the relevant kinesis queue
 	err = queue.SendToQueue(structuredData, watchId)
