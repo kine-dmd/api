@@ -30,6 +30,8 @@ func Init(r *mux.Router) {
 		log.Fatal(err)
 	}
 
+	watchDB = makeStandardDynamoCachedWatchDB()
+
 	r.HandleFunc("/upload/apple-watch-3/{uuid}", binaryHandler).Methods("POST")
 }
 

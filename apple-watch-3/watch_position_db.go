@@ -11,13 +11,13 @@ type watchPositionDB interface {
 }
 
 // Need a time interface for mocking time in tests
-type apiTime interface {
-	currentTime() time.Time
+type ApiTime interface {
+	CurrentTime() time.Time
 }
 
 type systemTime struct{}
 
-func (systemTime) currentTime() time.Time {
+func (systemTime) CurrentTime() time.Time {
 	return time.Now()
 }
 
@@ -25,31 +25,36 @@ type dynamoCachedWatchDB struct {
 	dbConnection  dynamoDB.DynamoDBInterface
 	cache         map[string]watchPosition
 	lastUpdatedAt time.Time
-	timeKeeper    apiTime
+	timeKeeper    ApiTime
 }
 
-func makeDynamoCachedWatchDB() *dynamoCachedWatchDB {
-	dcw := new(dynamoCachedWatchDB)
-
+func makeStandardDynamoCachedWatchDB() *dynamoCachedWatchDB {
 	// Connect to Dynamo
 	const table_name string = "apple_watch_3_positions"
-	dcw.dbConnection = &dynamoDB.DynamoDBClient{}
-	err := dcw.dbConnection.InitConn(table_name)
+	dbConnection := &dynamoDB.DynamoDBClient{}
+	err := dbConnection.InitConn(table_name)
 	if err != nil {
 		log.Println("Error establishing connection to DynamoDB")
 		log.Fatal(err)
 	}
 
-	// Use the standard clock and eager load the cache
-	dcw.timeKeeper = systemTime{}
-	dcw.updateCache()
+	return makeDynamoCachedWatchDB(dbConnection, systemTime{})
+}
 
+func makeDynamoCachedWatchDB(dbConnection dynamoDB.DynamoDBInterface, timeKeeper ApiTime) *dynamoCachedWatchDB {
+	// Create a new connection
+	dcw := new(dynamoCachedWatchDB)
+	dcw.dbConnection = dbConnection
+	dcw.timeKeeper = timeKeeper
+
+	// Eager load the cache
+	dcw.updateCache()
 	return dcw
 }
 
 func (dcw *dynamoCachedWatchDB) getWatchPosition(uuid string) (watchPosition, bool) {
 	// If it had been more than 2 hours, always update the cache
-	durationSinceUpdate := dcw.timeKeeper.currentTime().Sub(dcw.lastUpdatedAt)
+	durationSinceUpdate := dcw.timeKeeper.CurrentTime().Sub(dcw.lastUpdatedAt)
 	if durationSinceUpdate.Hours() >= 2 {
 		dcw.updateCache()
 	}
@@ -85,5 +90,5 @@ func (dcw *dynamoCachedWatchDB) updateCache() {
 
 	// Update the cached values
 	dcw.cache = parsedRows
-	dcw.lastUpdatedAt = dcw.timeKeeper.currentTime()
+	dcw.lastUpdatedAt = dcw.timeKeeper.CurrentTime()
 }

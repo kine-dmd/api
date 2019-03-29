@@ -105,15 +105,8 @@ func makeMockQueue(t *testing.T) (*gomock.Controller, *mocks.MockKinesisQueueInt
 }
 
 func TestValidUUID(t *testing.T) {
-	checkValidUUID(t, "00000000-0000-0000-0000-000000000000")
-}
-
-func TestValidUUIDWithoutDashes(t *testing.T) {
-	checkValidUUID(t, "00000000000000000000000000000000")
-}
-
-func checkValidUUID(t *testing.T, validUUID string) {
 	// Exactly 0 things should be sent to the queue
+	validUUID := "00000000-0000-0000-0000-000000000000"
 	mockCtrl, mockDoer := makeMockQueue(t)
 	mockDoer.EXPECT().SendToQueue(gomock.Any(), validUUID).Return(nil).Times(1)
 

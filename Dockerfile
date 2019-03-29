@@ -22,6 +22,8 @@ RUN GOBIN=$PWD/vendor/bin/ go install ./vendor/github.com/golang/mock/mockgen/
 
 RUN mkdir mocks
 RUN vendor/bin/mockgen -destination=mocks/mock_kinesis.go -package=mocks github.com/kine-dmd/api/kinesisqueue KinesisQueueInterface
+RUN vendor/bin/mockgen -destination=mocks/mock_dynamo.go -package=mocks github.com/kine-dmd/api/dynamoDB DynamoDBInterface
+RUN vendor/bin/mockgen -destination=mocks/mock_time.go -package=mocks github.com/kine-dmd/api/apple-watch-3 ApiTime
 RUN go test -v ./...
 
 RUN rm -f **/*_test.go && rm -rf vendor/bin && rm -rf mocks
