@@ -16,3 +16,6 @@
 
 # Dependencies
 vendor/*
+
+# Mocks
+mocks/*
