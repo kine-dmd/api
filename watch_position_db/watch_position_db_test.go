@@ -1,8 +1,9 @@
-package apple_watch_3
+package watch_position_db_test
 
 import (
 	"github.com/golang/mock/gomock"
 	"github.com/kine-dmd/api/mocks"
+	"github.com/kine-dmd/api/watch_position_db"
 	"testing"
 	"time"
 )
@@ -14,7 +15,7 @@ func TestGetsDataOnCreation(t *testing.T) {
 	mockTime.EXPECT().CurrentTime().Return(time.Now()).Times(1)
 
 	// Make an empty cached DB and query it
-	_ = makeDynamoCachedWatchDB(mockDB, mockTime)
+	_ = watch_position_db.MakeDynamoCachedWatchDB(mockDB, mockTime)
 	mockCtrl.Finish()
 }
 
@@ -26,9 +27,9 @@ func TestRetrievingRowFromCache(t *testing.T) {
 	mockTime.EXPECT().CurrentTime().Return(curTime).Times(1)
 
 	// Make an empty cached DB and query it
-	dcw := makeDynamoCachedWatchDB(mockDB, mockTime)
+	dcw := watch_position_db.MakeDynamoCachedWatchDB(mockDB, mockTime)
 	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour)).Times(1)
-	watchPos, exists := dcw.getWatchPosition("00000000-0000-0000-0000-000000000001")
+	watchPos, exists := dcw.GetWatchPosition("00000000-0000-0000-0000-000000000001")
 
 	// Check that no result was obtained
 	checkRetrievedExistence(t, exists, true)
@@ -44,12 +45,12 @@ func TestRetrievingRowReloadCache(t *testing.T) {
 	// Make an empty cached DB and query it
 	curTime := time.Now()
 	mockTime.EXPECT().CurrentTime().Return(curTime).Times(1)
-	dcw := makeDynamoCachedWatchDB(mockDB, mockTime)
+	dcw := watch_position_db.MakeDynamoCachedWatchDB(mockDB, mockTime)
 
 	// Query the data 3 hours after load
 	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).Times(2)
 	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
-	watchPos, exists := dcw.getWatchPosition("00000000-0000-0000-0000-000000000001")
+	watchPos, exists := dcw.GetWatchPosition("00000000-0000-0000-0000-000000000001")
 
 	// Check that no result was obtained
 	checkRetrievedExistence(t, exists, true)
@@ -65,12 +66,12 @@ func TestRetrievingRowReloadCacheThenFromCache(t *testing.T) {
 	// Make an empty cached DB and query it
 	curTime := time.Now()
 	mockTime.EXPECT().CurrentTime().Return(curTime).Times(1)
-	dcw := makeDynamoCachedWatchDB(mockDB, mockTime)
+	dcw := watch_position_db.MakeDynamoCachedWatchDB(mockDB, mockTime)
 
 	// Query the data 3 hours after load
 	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).Times(2)
 	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
-	watchPos, exists := dcw.getWatchPosition("00000000-0000-0000-0000-000000000001")
+	watchPos, exists := dcw.GetWatchPosition("00000000-0000-0000-0000-000000000001")
 
 	// Check the results
 	checkRetrievedExistence(t, exists, true)
@@ -78,7 +79,7 @@ func TestRetrievingRowReloadCacheThenFromCache(t *testing.T) {
 
 	// Query the data 1 hours after previous load
 	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 4)).Times(1)
-	watchPos, exists = dcw.getWatchPosition("00000000-0000-0000-0000-000000000002")
+	watchPos, exists = dcw.GetWatchPosition("00000000-0000-0000-0000-000000000002")
 
 	// Check the results
 	checkRetrievedExistence(t, exists, true)
@@ -92,7 +93,7 @@ func checkRetrievedExistence(t *testing.T, exists bool, expectedExists bool) {
 	}
 }
 
-func checkRetrievedWatchPositionValues(t *testing.T, position watchPosition, limb uint8, patientID string) {
+func checkRetrievedWatchPositionValues(t *testing.T, position watch_position_db.WatchPosition, limb uint8, patientID string) {
 	if position.Limb != limb {
 		t.Errorf("Mismatching watch positions. Expected %d got %d", limb, position.Limb)
 	}

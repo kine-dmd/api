@@ -1,4 +1,4 @@
-package apple_watch_3
+package watch_position_db
 
 import (
 	"github.com/kine-dmd/api/dynamoDB"
@@ -6,8 +6,13 @@ import (
 	"time"
 )
 
-type watchPositionDB interface {
-	getWatchPosition(uuid string) (watchPosition, bool)
+type WatchPosition struct {
+	PatientID string `json:"PatientID"`
+	Limb      uint8  `json:"Limb"`
+}
+
+type WatchPositionDB interface {
+	GetWatchPosition(uuid string) (WatchPosition, bool)
 }
 
 // Need a time interface for mocking time in tests
@@ -23,12 +28,12 @@ func (systemTime) CurrentTime() time.Time {
 
 type dynamoCachedWatchDB struct {
 	dbConnection  dynamoDB.DynamoDBInterface
-	cache         map[string]watchPosition
+	cache         map[string]WatchPosition
 	lastUpdatedAt time.Time
 	timeKeeper    ApiTime
 }
 
-func makeStandardDynamoCachedWatchDB() *dynamoCachedWatchDB {
+func MakeStandardDynamoCachedWatchDB() *dynamoCachedWatchDB {
 	// Connect to Dynamo
 	const table_name string = "apple_watch_3_positions"
 	dbConnection := &dynamoDB.DynamoDBClient{}
@@ -38,10 +43,10 @@ func makeStandardDynamoCachedWatchDB() *dynamoCachedWatchDB {
 		log.Fatal(err)
 	}
 
-	return makeDynamoCachedWatchDB(dbConnection, systemTime{})
+	return MakeDynamoCachedWatchDB(dbConnection, systemTime{})
 }
 
-func makeDynamoCachedWatchDB(dbConnection dynamoDB.DynamoDBInterface, timeKeeper ApiTime) *dynamoCachedWatchDB {
+func MakeDynamoCachedWatchDB(dbConnection dynamoDB.DynamoDBInterface, timeKeeper ApiTime) *dynamoCachedWatchDB {
 	// Create a new connection
 	dcw := new(dynamoCachedWatchDB)
 	dcw.dbConnection = dbConnection
@@ -52,7 +57,7 @@ func makeDynamoCachedWatchDB(dbConnection dynamoDB.DynamoDBInterface, timeKeeper
 	return dcw
 }
 
-func (dcw *dynamoCachedWatchDB) getWatchPosition(uuid string) (watchPosition, bool) {
+func (dcw *dynamoCachedWatchDB) GetWatchPosition(uuid string) (WatchPosition, bool) {
 	// If it had been more than 2 hours, always update the cache
 	durationSinceUpdate := dcw.timeKeeper.CurrentTime().Sub(dcw.lastUpdatedAt)
 	if durationSinceUpdate.Hours() >= 2 {
@@ -80,9 +85,9 @@ func (dcw *dynamoCachedWatchDB) updateCache() {
 	unparsedRows := dcw.dbConnection.GetTableScan()
 
 	// Format the data
-	var parsedRows = make(map[string]watchPosition)
+	var parsedRows = make(map[string]WatchPosition)
 	for _, row := range unparsedRows {
-		parsedRows[row["uuid"].(string)] = watchPosition{
+		parsedRows[row["uuid"].(string)] = WatchPosition{
 			row["patientId"].(string),
 			uint8(row["limb"].(float64)),
 		}

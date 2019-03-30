@@ -6,11 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"log"
-	"os"
 )
 
 type KinesisQueueInterface interface {
-	InitConn(streamName string) error
 	SendToQueue(data interface{}, shardId string) error
 }
 
@@ -19,22 +17,22 @@ type KinesisQueueClient struct {
 	streamName string
 }
 
-// InitConn opens the connection to the location event kinesis queue
-func (kq *KinesisQueueClient) InitConn(streamName string) error {
+// MakeKinesisQueue opens the connection to the location event kinesis queue
+func MakeKinesisQueue(streamName string) *KinesisQueueClient {
 	// Define the stream name and the AWS region it's in
 	region := "eu-west-2"
 	// Create a new AWS session in the required region
 	s, err := session.NewSession(&aws.Config{Region: aws.String(region)})
 	if err != nil {
-		log.Println(err.Error())
-		os.Exit(1)
+		log.Fatal("Unable to make AWS connection for Kineis", err.Error())
 	}
 
-	// Create a new kinesis adapter (assume stream exists
+	// Create a new kinesis adapter (assume stream exists on AWS)
+	kq := new(KinesisQueueClient)
 	kq.kinesis = kinesis.New(s)
 	kq.streamName = streamName
 
-	return nil
+	return kq
 }
 
 // Pre: the event object is valid

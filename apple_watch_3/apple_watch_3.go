@@ -3,6 +3,7 @@ package apple_watch_3
 import (
 	"github.com/gorilla/mux"
 	"github.com/kine-dmd/api/kinesisqueue"
+	"github.com/kine-dmd/api/watch_position_db"
 	"github.com/satori/go.uuid"
 	"io/ioutil"
 	"log"
@@ -10,32 +11,36 @@ import (
 )
 
 type unparsedAppleWatch3Data struct {
-	WatchPosition watchPosition `json:"WatchPosition"`
-	RawData       []byte        `json:"RawData"`
+	WatchPosition watch_position_db.WatchPosition `json:"WatchPosition"`
+	RawData       []byte                          `json:"RawData"`
 }
 
-type watchPosition struct {
-	PatientID string `json:"PatientID"`
-	Limb      uint8  `json:"Limb"`
+type apple_watch_3_handler struct {
+	queue   kinesisqueue.KinesisQueueInterface
+	watchDB watch_position_db.WatchPositionDB
 }
 
-var queue kinesisqueue.KinesisQueueInterface = &kinesisqueue.KinesisQueueClient{}
-var watchDB watchPositionDB = &dynamoCachedWatchDB{}
+func MakeStandardAppleWatch3Handler(r *mux.Router) *apple_watch_3_handler {
+	// Open a kinesis queue & dynamo DB connection
+	const STREAM_NAME = "apple_watch_3"
+	queue := kinesisqueue.MakeKinesisQueue(STREAM_NAME)
+	watchDB := watch_position_db.MakeStandardDynamoCachedWatchDB()
 
-func Init(r *mux.Router) {
-	// Open a kinesis queue connection
-	const STREAM_NAME = "apple-watch-3"
-	err := queue.InitConn(STREAM_NAME)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	watchDB = makeStandardDynamoCachedWatchDB()
-
-	r.HandleFunc("/upload/apple-watch-3/{uuid}", binaryHandler).Methods("POST")
+	return MakeAppleWatch3Handler(r, queue, watchDB)
 }
 
-func binaryHandler(writer http.ResponseWriter, request *http.Request) {
+func MakeAppleWatch3Handler(r *mux.Router, queue kinesisqueue.KinesisQueueInterface, watchDB watch_position_db.WatchPositionDB) *apple_watch_3_handler {
+	// Assign the databases
+	aw3Handler := new(apple_watch_3_handler)
+	aw3Handler.queue = queue
+	aw3Handler.watchDB = watchDB
+
+	// Pick a URL to handle
+	r.HandleFunc("/upload/apple_watch_3/{uuid}", aw3Handler.binaryHandler).Methods("POST")
+	return aw3Handler
+}
+
+func (aw3Handler apple_watch_3_handler) binaryHandler(writer http.ResponseWriter, request *http.Request) {
 	// Extract the UUID from the URL
 	vars := mux.Vars(request)
 	watchId := vars["uuid"]
@@ -65,7 +70,7 @@ func binaryHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// Get the watch position
-	position, exists := watchDB.getWatchPosition(watchId)
+	position, exists := aw3Handler.watchDB.GetWatchPosition(watchId)
 	if !exists {
 		http.Error(writer, "Unable to match identifier.", http.StatusBadRequest)
 		return
@@ -75,7 +80,7 @@ func binaryHandler(writer http.ResponseWriter, request *http.Request) {
 	structuredData := unparsedAppleWatch3Data{WatchPosition: position, RawData: data}
 
 	// Send it to the relevant kinesis queue
-	err = queue.SendToQueue(structuredData, watchId)
+	err = aw3Handler.queue.SendToQueue(structuredData, watchId)
 	if err != nil {
 		http.Error(writer, "Server unable to forward body", http.StatusInternalServerError)
 	}
