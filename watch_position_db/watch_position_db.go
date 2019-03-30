@@ -1,6 +1,7 @@
 package watch_position_db
 
 import (
+	"github.com/kine-dmd/api/api_time"
 	"github.com/kine-dmd/api/dynamoDB"
 	"log"
 	"time"
@@ -15,22 +16,11 @@ type WatchPositionDB interface {
 	GetWatchPosition(uuid string) (WatchPosition, bool)
 }
 
-// Need a time interface for mocking time in tests
-type ApiTime interface {
-	CurrentTime() time.Time
-}
-
-type systemTime struct{}
-
-func (systemTime) CurrentTime() time.Time {
-	return time.Now()
-}
-
 type dynamoCachedWatchDB struct {
 	dbConnection  dynamoDB.DynamoDBInterface
 	cache         map[string]WatchPosition
 	lastUpdatedAt time.Time
-	timeKeeper    ApiTime
+	timeKeeper    api_time.ApiTime
 }
 
 func MakeStandardDynamoCachedWatchDB() *dynamoCachedWatchDB {
@@ -43,10 +33,10 @@ func MakeStandardDynamoCachedWatchDB() *dynamoCachedWatchDB {
 		log.Fatal(err)
 	}
 
-	return MakeDynamoCachedWatchDB(dbConnection, systemTime{})
+	return MakeDynamoCachedWatchDB(dbConnection, api_time.SystemTime{})
 }
 
-func MakeDynamoCachedWatchDB(dbConnection dynamoDB.DynamoDBInterface, timeKeeper ApiTime) *dynamoCachedWatchDB {
+func MakeDynamoCachedWatchDB(dbConnection dynamoDB.DynamoDBInterface, timeKeeper api_time.ApiTime) *dynamoCachedWatchDB {
 	// Create a new connection
 	dcw := new(dynamoCachedWatchDB)
 	dcw.dbConnection = dbConnection
