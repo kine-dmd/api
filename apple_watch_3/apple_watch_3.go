@@ -22,7 +22,7 @@ type apple_watch_3_handler struct {
 
 func MakeStandardAppleWatch3Handler(r *mux.Router) *apple_watch_3_handler {
 	// Open a kinesis queue & dynamo DB connection
-	const STREAM_NAME = "apple_watch_3"
+	const STREAM_NAME = "apple-watch-3"
 	queue := kinesisqueue.MakeKinesisQueue(STREAM_NAME)
 	watchDB := watch_position_db.MakeStandardDynamoCachedWatchDB()
 
@@ -36,7 +36,7 @@ func MakeAppleWatch3Handler(r *mux.Router, queue kinesisqueue.KinesisQueueInterf
 	aw3Handler.watchDB = watchDB
 
 	// Pick a URL to handle
-	r.HandleFunc("/upload/apple_watch_3/{uuid}", aw3Handler.binaryHandler).Methods("POST")
+	r.HandleFunc("/upload/apple-watch-3/{uuid}", aw3Handler.binaryHandler).Methods("POST")
 	return aw3Handler
 }
 
