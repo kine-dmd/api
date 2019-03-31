@@ -20,7 +20,7 @@ func TestWrongLengthUUID(t *testing.T) {
 	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
 
 	body := bytes.NewReader([]byte{1, 2, 3})
-	req, _ := http.NewRequest("POST", "/upload/apple_watch_3/someuuid", body)
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/someuuid", body)
 	response := sendRequest(router, req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 
@@ -34,7 +34,7 @@ func TestUUIDNotBase64(t *testing.T) {
 	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
 
 	body := bytes.NewReader([]byte{1, 2, 3})
-	req, _ := http.NewRequest("POST", "/upload/apple_watch_3/ZZZZZZZZ-XXXX-YYYY-UUUU-WWWWWWWWWWWW", body)
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/ZZZZZZZZ-XXXX-YYYY-UUUU-WWWWWWWWWWWW", body)
 	response := sendRequest(router, req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 
@@ -47,7 +47,7 @@ func TestNilBody(t *testing.T) {
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
 	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
 
-	req, _ := http.NewRequest("POST", "/upload/apple_watch_3/00000000-0000-0000-0000-000000000000", nil)
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", nil)
 	response := sendRequest(router, req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 
@@ -60,7 +60,7 @@ func TestNilBodyWithSetContentLength(t *testing.T) {
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
 	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
 
-	req, _ := http.NewRequest("POST", "/upload/apple_watch_3/00000000-0000-0000-0000-000000000000", nil)
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", nil)
 	req.ContentLength = 55
 	response := sendRequest(router, req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
@@ -74,7 +74,7 @@ func Test0LenBody(t *testing.T) {
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
 	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
 
-	req, _ := http.NewRequest("POST", "/upload/apple_watch_3/00000000-0000-0000-0000-000000000000", bytes.NewReader([]byte{}))
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", bytes.NewReader([]byte{}))
 	response := sendRequest(router, req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
 
@@ -88,7 +88,7 @@ func Test0LenBodyWithSetContentLength(t *testing.T) {
 	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
 
 	// Set a mismatching content length
-	req, _ := http.NewRequest("POST", "/upload/apple_watch_3/00000000-0000-0000-0000-000000000000", bytes.NewReader([]byte{}))
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", bytes.NewReader([]byte{}))
 	req.ContentLength = 55
 	response := sendRequest(router, req)
 	checkResponseCode(t, http.StatusBadRequest, response.Code)
@@ -106,7 +106,7 @@ func TestValidUUID(t *testing.T) {
 
 	// Make and send a request with some data
 	body := bytes.NewReader([]byte{1, 2, 3})
-	req, _ := http.NewRequest("POST", "/upload/apple_watch_3/"+validUUID, body)
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/"+validUUID, body)
 	response := sendRequest(router, req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
