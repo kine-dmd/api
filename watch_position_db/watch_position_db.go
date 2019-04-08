@@ -4,6 +4,7 @@ import (
 	"github.com/kine-dmd/api/api_time"
 	"github.com/kine-dmd/api/dynamoDB"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -19,7 +20,9 @@ type WatchPositionDB interface {
 type dynamoCachedWatchDB struct {
 	dbConnection  dynamoDB.DynamoDBInterface
 	cache         map[string]WatchPosition
+	cacheMutex    sync.RWMutex
 	lastUpdatedAt time.Time
+	timeMutex     sync.RWMutex
 	timeKeeper    api_time.ApiTime
 }
 
@@ -43,34 +46,47 @@ func MakeDynamoCachedWatchDB(dbConnection dynamoDB.DynamoDBInterface, timeKeeper
 	dcw.timeKeeper = timeKeeper
 
 	// Eager load the cache
+	dcw.cacheMutex = sync.RWMutex{}
+	dcw.timeMutex = sync.RWMutex{}
 	dcw.updateCache()
 	return dcw
 }
 
 func (dcw *dynamoCachedWatchDB) GetWatchPosition(uuid string) (WatchPosition, bool) {
 	// If it had been more than 2 hours, always update the cache
-	durationSinceUpdate := dcw.timeKeeper.CurrentTime().Sub(dcw.lastUpdatedAt)
-	if durationSinceUpdate.Hours() >= 2 {
+	if dcw.shouldUpdateCache() {
 		dcw.updateCache()
 	}
 
-	// Try and retrieve the item from the updated cache
+	// Obtain a read lock for the cache
+	defer dcw.cacheMutex.RUnlock()
+	dcw.cacheMutex.RLock()
+
+	// Return value and whether it exists or not
 	val, ok := dcw.cache[uuid]
-	if ok {
-		return val, ok
-	}
-
-	// If item doesn't exist and cache was updated more than 15 minutes ago, retry update
-	if durationSinceUpdate.Minutes() > 15 {
-		dcw.updateCache()
-	}
-
-	// Return value whether it exists or not
-	val, ok = dcw.cache[uuid]
 	return val, ok
 }
 
+func (dcw *dynamoCachedWatchDB) shouldUpdateCache() bool {
+	// Get a read lock for the time
+	defer dcw.timeMutex.RUnlock()
+	dcw.timeMutex.RLock()
+
+	// If it had been more than 2 hours update the cache
+	durationSinceUpdate := dcw.timeKeeper.CurrentTime().Sub(dcw.lastUpdatedAt)
+	return durationSinceUpdate.Hours() >= 2
+}
+
 func (dcw *dynamoCachedWatchDB) updateCache() {
+	// Get the timestamp for the cache
+	defer dcw.cacheMutex.Unlock()
+	dcw.cacheMutex.Lock()
+
+	// Check someone else has not already updated the cache while we waited
+	if !dcw.shouldUpdateCache() {
+		return
+	}
+
 	// Get the raw data from DynamoDB
 	unparsedRows := dcw.dbConnection.GetTableScan()
 
@@ -82,6 +98,10 @@ func (dcw *dynamoCachedWatchDB) updateCache() {
 			uint8(row["limb"].(float64)),
 		}
 	}
+
+	// Get the write lock for the timestamp
+	defer dcw.timeMutex.Unlock()
+	dcw.timeMutex.Lock()
 
 	// Update the cached values
 	dcw.cache = parsedRows

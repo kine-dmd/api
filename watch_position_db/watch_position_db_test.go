@@ -12,7 +12,7 @@ func TestGetsDataOnCreation(t *testing.T) {
 	// Make mocks and set the expectations
 	mockCtrl, mockDB, mockTime := makeMocks(t)
 	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
-	mockTime.EXPECT().CurrentTime().Return(time.Now()).Times(1)
+	mockTime.EXPECT().CurrentTime().Return(time.Now()).Times(2)
 
 	// Make an empty cached DB and query it
 	_ = MakeDynamoCachedWatchDB(mockDB, mockTime)
@@ -24,7 +24,7 @@ func TestRetrievingRowFromCache(t *testing.T) {
 	mockCtrl, mockDB, mockTime := makeMocks(t)
 	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
 	curTime := time.Now()
-	mockTime.EXPECT().CurrentTime().Return(curTime).Times(1)
+	mockTime.EXPECT().CurrentTime().Return(curTime).Times(2)
 
 	// Make an empty cached DB and query it
 	dcw := MakeDynamoCachedWatchDB(mockDB, mockTime)
@@ -44,11 +44,11 @@ func TestRetrievingRowReloadCache(t *testing.T) {
 
 	// Make an empty cached DB and query it
 	curTime := time.Now()
-	mockTime.EXPECT().CurrentTime().Return(curTime).Times(1)
+	mockTime.EXPECT().CurrentTime().Return(curTime).Times(2)
 	dcw := MakeDynamoCachedWatchDB(mockDB, mockTime)
 
 	// Query the data 3 hours after load
-	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).Times(2)
+	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).Times(3)
 	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
 	watchPos, exists := dcw.GetWatchPosition("00000000-0000-0000-0000-000000000001")
 
@@ -65,11 +65,11 @@ func TestRetrievingRowReloadCacheThenFromCache(t *testing.T) {
 
 	// Make an empty cached DB and query it
 	curTime := time.Now()
-	mockTime.EXPECT().CurrentTime().Return(curTime).Times(1)
+	mockTime.EXPECT().CurrentTime().Return(curTime).Times(2)
 	dcw := MakeDynamoCachedWatchDB(mockDB, mockTime)
 
 	// Query the data 3 hours after load
-	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).Times(2)
+	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).Times(3)
 	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
 	watchPos, exists := dcw.GetWatchPosition("00000000-0000-0000-0000-000000000001")
 
