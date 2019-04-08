@@ -4,6 +4,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kine-dmd/api/mocks/mock_dynamo_db"
 	"github.com/kine-dmd/api/mocks/mock_time"
+	"sync"
 	"testing"
 	"time"
 )
@@ -84,6 +85,42 @@ func TestRetrievingRowReloadCacheThenFromCache(t *testing.T) {
 	// Check the results
 	checkRetrievedExistence(t, exists, true)
 	checkRetrievedWatchPositionValues(t, watchPos, 1, "dmd02")
+	mockCtrl.Finish()
+}
+
+func TestStressOnlyPerformsOneReload(t *testing.T) {
+	// Make mocks and set the expectations
+	mockCtrl, mockDB, mockTime := makeMocks(t)
+	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+
+	// Make an empty cached DB and query it
+	curTime := time.Now()
+	mockTime.EXPECT().CurrentTime().Return(curTime).Times(2)
+	dcw := MakeDynamoCachedWatchDB(mockDB, mockTime)
+
+	// Query the data 3 hours after load
+	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).AnyTimes()
+	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+
+	// Simulate 50 requests being sent at once. Table scan should still only be called once
+	waitGroup := sync.WaitGroup{}
+	for i := 0; i < 50; i++ {
+		waitGroup.Add(1)
+
+		// Spin  up a new thread to send request
+		go func() {
+			// Make the request
+			defer waitGroup.Done()
+			watchPos, exists := dcw.GetWatchPosition("00000000-0000-0000-0000-000000000001")
+
+			// Check the result was obtained
+			checkRetrievedExistence(t, exists, true)
+			checkRetrievedWatchPositionValues(t, watchPos, 2, "dmd01")
+		}()
+	}
+
+	// Wait for all threads to finish requests and check mocks status
+	waitGroup.Wait()
 	mockCtrl.Finish()
 }
 
