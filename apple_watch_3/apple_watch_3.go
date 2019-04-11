@@ -17,7 +17,7 @@ type unparsedAppleWatch3Data struct {
 
 type apple_watch_3_handler struct {
 	queue   kinesisqueue.KinesisQueueInterface
-	watchDB watch_position_db.WatchPositionDB
+	watchDB watch_position_db.WatchPositionDatabase
 }
 
 func MakeStandardAppleWatch3Handler(r *mux.Router) *apple_watch_3_handler {
@@ -29,7 +29,7 @@ func MakeStandardAppleWatch3Handler(r *mux.Router) *apple_watch_3_handler {
 	return MakeAppleWatch3Handler(r, queue, watchDB)
 }
 
-func MakeAppleWatch3Handler(r *mux.Router, queue kinesisqueue.KinesisQueueInterface, watchDB watch_position_db.WatchPositionDB) *apple_watch_3_handler {
+func MakeAppleWatch3Handler(r *mux.Router, queue kinesisqueue.KinesisQueueInterface, watchDB watch_position_db.WatchPositionDatabase) *apple_watch_3_handler {
 	// Assign the databases
 	aw3Handler := new(apple_watch_3_handler)
 	aw3Handler.queue = queue
