@@ -14,13 +14,13 @@ func makeCSVFile() {
 	// Write the data to the file
 	origUUIDs, origPatientIds, origLimbs := makeFakePositionData()
 	writer := csv.NewWriter(file)
-	defer writer.Flush()
 	for i := range origUUIDs {
 		_ = writer.Write([]string{origUUIDs[i],
 			origPatientIds[i],
 			strconv.Itoa(int(origLimbs[i]))})
 	}
 
+	writer.Flush()
 	_ = file.Close()
 }
 
