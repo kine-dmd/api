@@ -2,7 +2,7 @@ package watch_position_db
 
 import (
 	"github.com/golang/mock/gomock"
-	"github.com/kine-dmd/api/mocks/mock_time"
+	"github.com/kine-dmd/api/api_time"
 	"sync"
 	"testing"
 	"time"
@@ -151,10 +151,10 @@ func makeFakeData() map[string]WatchPosition {
 	return allData
 }
 
-func makeMocks(t *testing.T) (*gomock.Controller, *MockWatchPositionDatabase, *mock_api_time.MockApiTime) {
+func makeMocks(t *testing.T) (*gomock.Controller, *MockWatchPositionDatabase, *api_time.MockApiTime) {
 	// Make a mock for the time and database
 	mockCtrl := gomock.NewController(t)
 	mockDB := NewMockWatchPositionDatabase(mockCtrl)
-	mockTime := mock_api_time.NewMockApiTime(mockCtrl)
+	mockTime := api_time.NewMockApiTime(mockCtrl)
 	return mockCtrl, mockDB, mockTime
 }
