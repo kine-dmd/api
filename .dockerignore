@@ -1,0 +1,16 @@
+# Files and folders not to be copied to docker context
+
+# Dependencies (install them from clean download)
+vendor/
+
+# Mocks (make them from fresh to check for changes)
+**/mock*.go
+
+# Travis CI configuration
+.travis.yml
+
+# Binary files
+*.bin
+
+# Markdown files
+*.md
