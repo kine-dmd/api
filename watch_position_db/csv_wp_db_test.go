@@ -10,7 +10,6 @@ import (
 func makeCSVFile() {
 	// Make a new file
 	file, _ := os.Create("watch_positions.csv")
-	defer file.Close()
 
 	// Write the data to the file
 	origUUIDs, origPatientIds, origLimbs := makeFakePositionData()
@@ -19,8 +18,10 @@ func makeCSVFile() {
 	for i := range origUUIDs {
 		_ = writer.Write([]string{origUUIDs[i],
 			origPatientIds[i],
-			strconv.FormatFloat(origLimbs[i], 'f', 0, 64)})
+			strconv.Itoa(int(origLimbs[i]))})
 	}
+
+	_ = file.Close()
 }
 
 func removeCSVFile() {

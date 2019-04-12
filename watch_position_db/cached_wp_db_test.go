@@ -11,7 +11,7 @@ import (
 func TestGetsDataOnCreation(t *testing.T) {
 	// Make mocks and set the expectations
 	mockCtrl, mockDB, mockTime := makeMocks(t)
-	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+	mockDB.EXPECT().GetTableScan().Return(makeFakeScanData()).Times(1)
 	mockTime.EXPECT().CurrentTime().Return(time.Now()).Times(2)
 
 	// Make an empty cached DB and query it
@@ -22,7 +22,7 @@ func TestGetsDataOnCreation(t *testing.T) {
 func TestRetrievingRowFromCache(t *testing.T) {
 	// Make mocks and set the expectations
 	mockCtrl, mockDB, mockTime := makeMocks(t)
-	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+	mockDB.EXPECT().GetTableScan().Return(makeFakeScanData()).Times(1)
 	curTime := time.Now()
 	mockTime.EXPECT().CurrentTime().Return(curTime).Times(2)
 
@@ -44,12 +44,12 @@ func TestRetrievingRowReloadCache(t *testing.T) {
 	// Make an empty cached DB and query it
 	curTime := time.Now()
 	mockTime.EXPECT().CurrentTime().Return(curTime).Times(2)
-	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+	mockDB.EXPECT().GetTableScan().Return(makeFakeScanData()).Times(1)
 	dcw := MakeCachedWatchDB(mockDB, mockTime)
 
 	// Query the data 3 hours after load
 	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).Times(3)
-	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+	mockDB.EXPECT().GetTableScan().Return(makeFakeScanData()).Times(1)
 	watchPos, exists := dcw.GetWatchPosition("00000000-0000-0000-0000-000000000001")
 
 	// Check that no result was obtained
@@ -61,7 +61,7 @@ func TestRetrievingRowReloadCache(t *testing.T) {
 func TestRetrievingRowReloadCacheThenFromCache(t *testing.T) {
 	// Make mocks and set the expectations
 	mockCtrl, mockDB, mockTime := makeMocks(t)
-	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+	mockDB.EXPECT().GetTableScan().Return(makeFakeScanData()).Times(1)
 
 	// Make an empty cached DB and query it
 	curTime := time.Now()
@@ -70,7 +70,7 @@ func TestRetrievingRowReloadCacheThenFromCache(t *testing.T) {
 
 	// Query the data 3 hours after load
 	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).Times(3)
-	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+	mockDB.EXPECT().GetTableScan().Return(makeFakeScanData()).Times(1)
 	watchPos, exists := dcw.GetWatchPosition("00000000-0000-0000-0000-000000000001")
 
 	// Check the results
@@ -90,7 +90,7 @@ func TestRetrievingRowReloadCacheThenFromCache(t *testing.T) {
 func TestStressOnlyPerformsOneReload(t *testing.T) {
 	// Make mocks and set the expectations
 	mockCtrl, mockDB, mockTime := makeMocks(t)
-	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+	mockDB.EXPECT().GetTableScan().Return(makeFakeScanData()).Times(1)
 
 	// Make an empty cached DB and query it
 	curTime := time.Now()
@@ -99,7 +99,7 @@ func TestStressOnlyPerformsOneReload(t *testing.T) {
 
 	// Query the data 3 hours after load
 	mockTime.EXPECT().CurrentTime().Return(curTime.Add(time.Hour * 3)).AnyTimes()
-	mockDB.EXPECT().GetTableScan().Return(makeFakeData()).Times(1)
+	mockDB.EXPECT().GetTableScan().Return(makeFakeScanData()).Times(1)
 
 	// Simulate 50 requests being sent at once. Table scan should still only be called once
 	waitGroup := sync.WaitGroup{}
@@ -139,14 +139,19 @@ func checkRetrievedWatchPositionValues(t *testing.T, position WatchPosition, lim
 	}
 }
 
-func makeFakeData() map[string]WatchPosition {
+func makeFakeScanData() map[string]WatchPosition {
 	// Make a list of all rows
 	allData := make(map[string]WatchPosition)
 
-	// Create 3 fake rows
-	allData["00000000-0000-0000-0000-000000000000"] = WatchPosition{"dmd01", 1}
-	allData["00000000-0000-0000-0000-000000000001"] = WatchPosition{"dmd01", 2}
-	allData["00000000-0000-0000-0000-000000000002"] = WatchPosition{"dmd02", 1}
+	uuids, patiendIds, limbs := makeFakePositionData()
+
+	// Match the fake data to the format given by DynamoDB
+	for i := range uuids {
+		allData[uuids[i]] = WatchPosition{
+			patiendIds[i],
+			limbs[i],
+		}
+	}
 
 	return allData
 }
