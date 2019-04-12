@@ -24,7 +24,7 @@ func MakeKinesisQueue(streamName string) *KinesisQueueClient {
 	// Create a new AWS session in the required region
 	s, err := session.NewSession(&aws.Config{Region: aws.String(region)})
 	if err != nil {
-		log.Fatal("Unable to make AWS connection for Kineis", err.Error())
+		log.Fatal("Unable to make AWS connection for Kinesis", err.Error())
 	}
 
 	// Create a new kinesis adapter (assume stream exists on AWS)

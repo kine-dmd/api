@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestValidUUID(t *testing.T) {
+func TestScanDynamoDatabase(t *testing.T) {
 	// Exactly 0 things should be sent to the queue
 	mockCtrl, mockDB := makeMockDB(t)
 	mockDB.EXPECT().GetTableScan().Times(1).Return(makeTestRows()).Times(1)
