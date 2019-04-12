@@ -15,7 +15,7 @@
 .idea*
 
 # Dependencies
-vendor/*
+vendor/
 
 # Mocks
 **/mock*.go

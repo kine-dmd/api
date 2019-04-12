@@ -14,3 +14,9 @@ vendor/
 
 # Markdown files
 *.md
+
+# Git history
+.git/
+
+# JetBrains IDEs
+.idea/
