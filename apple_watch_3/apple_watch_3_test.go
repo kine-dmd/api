@@ -5,8 +5,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/kine-dmd/api/kinesisqueue"
-	"github.com/kine-dmd/api/mocks/mock_kinesis_queue"
-	"github.com/kine-dmd/api/mocks/mock_watch_pos_db"
 	"github.com/kine-dmd/api/watch_position_db"
 	"net/http"
 	"net/http/httptest"
@@ -113,15 +111,15 @@ func TestValidUUID(t *testing.T) {
 	mockCtrl.Finish()
 }
 
-func makeMockQueueAndDB(t *testing.T) (*gomock.Controller, *mock_kinesisqueue.MockKinesisQueueInterface, *mock_watch_position_db.MockWatchPositionDB) {
+func makeMockQueueAndDB(t *testing.T) (*gomock.Controller, *kinesisqueue.MockKinesisQueueInterface, *watch_position_db.MockWatchPositionDatabase) {
 	// Make a mock for the kinesis queue
 	mockCtrl := gomock.NewController(t)
-	mockQueue := mock_kinesisqueue.NewMockKinesisQueueInterface(mockCtrl)
-	mockDB := mock_watch_position_db.NewMockWatchPositionDB(mockCtrl)
+	mockQueue := kinesisqueue.NewMockKinesisQueueInterface(mockCtrl)
+	mockDB := watch_position_db.NewMockWatchPositionDatabase(mockCtrl)
 	return mockCtrl, mockQueue, mockDB
 }
 
-func initRouterAndHandler(mockQueue kinesisqueue.KinesisQueueInterface, mockWatchDB watch_position_db.WatchPositionDB) (*mux.Router, *apple_watch_3_handler) {
+func initRouterAndHandler(mockQueue kinesisqueue.KinesisQueueInterface, mockWatchDB watch_position_db.WatchPositionDatabase) (*mux.Router, *apple_watch_3_handler) {
 	router := mux.NewRouter()
 	handler := MakeAppleWatch3Handler(router, mockQueue, mockWatchDB)
 	return router, handler
