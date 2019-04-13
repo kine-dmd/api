@@ -30,6 +30,7 @@ RUN vendor/bin/mockgen -destination=kinesisqueue/mock_kinesis_queue.go -package=
 RUN vendor/bin/mockgen -destination=dynamoDB/mock_dynamo_db.go -package=dynamoDB github.com/kine-dmd/api/dynamoDB DynamoDBInterface
 RUN vendor/bin/mockgen -destination=api_time/mock_time.go -package=api_time github.com/kine-dmd/api/api_time ApiTime
 RUN vendor/bin/mockgen -destination=watch_position_db/mock_watch_pos_db.go  -package=watch_position_db github.com/kine-dmd/api/watch_position_db WatchPositionDatabase
+RUN vendor/bin/mockgen -destination=apple_watch_3/mock_data_writer.go  -package=apple_watch_3 github.com/kine-dmd/api/apple_watch_3 Aw3DataWriter
 
 # Run all tests
 RUN go test -v ./...

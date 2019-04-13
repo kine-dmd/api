@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
-	"github.com/kine-dmd/api/kinesisqueue"
 	"github.com/kine-dmd/api/watch_position_db"
 	"net/http"
 	"net/http/httptest"
@@ -15,7 +14,7 @@ func TestWrongLengthUUID(t *testing.T) {
 	// Exactly 0 things should be sent to the queue
 	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
-	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+	mockQueue.EXPECT().writeData(gomock.Any()).Return(nil).Times(0)
 
 	body := bytes.NewReader([]byte{1, 2, 3})
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/someuuid", body)
@@ -29,7 +28,7 @@ func TestUUIDNotBase64(t *testing.T) {
 	// Exactly 0 things should be sent to the queue
 	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
-	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+	mockQueue.EXPECT().writeData(gomock.Any()).Return(nil).Times(0)
 
 	body := bytes.NewReader([]byte{1, 2, 3})
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/ZZZZZZZZ-XXXX-YYYY-UUUU-WWWWWWWWWWWW", body)
@@ -43,7 +42,7 @@ func TestNilBody(t *testing.T) {
 	// Exactly 0 things should be sent to the queue
 	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
-	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+	mockQueue.EXPECT().writeData(gomock.Any()).Return(nil).Times(0)
 
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", nil)
 	response := sendRequest(router, req)
@@ -56,7 +55,7 @@ func TestNilBodyWithSetContentLength(t *testing.T) {
 	// Exactly 0 things should be sent to the queue
 	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
-	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+	mockQueue.EXPECT().writeData(gomock.Any()).Return(nil).Times(0)
 
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", nil)
 	req.ContentLength = 55
@@ -70,7 +69,7 @@ func Test0LenBody(t *testing.T) {
 	// Exactly 0 things should be sent to the queue
 	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
-	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+	mockQueue.EXPECT().writeData(gomock.Any()).Return(nil).Times(0)
 
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", bytes.NewReader([]byte{}))
 	response := sendRequest(router, req)
@@ -83,7 +82,7 @@ func Test0LenBodyWithSetContentLength(t *testing.T) {
 	// Exactly 0 things should be sent to the queue
 	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
-	mockQueue.EXPECT().SendToQueue(gomock.Any(), gomock.Any()).Return(nil).Times(0)
+	mockQueue.EXPECT().writeData(gomock.Any()).Return(nil).Times(0)
 
 	// Set a mismatching content length
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/00000000-0000-0000-0000-000000000000", bytes.NewReader([]byte{}))
@@ -99,7 +98,7 @@ func TestValidUUID(t *testing.T) {
 	validUUID := "00000000-0000-0000-0000-000000000000"
 	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
-	mockQueue.EXPECT().SendToQueue(gomock.Any(), validUUID).Return(nil).Times(1)
+	mockQueue.EXPECT().writeData(gomock.Any()).Return(nil).Times(1)
 	mockDB.EXPECT().GetWatchPosition(validUUID).Return(watch_position_db.WatchPosition{"dmd01", 1}, true).Times(1)
 
 	// Make and send a request with some data
@@ -111,15 +110,15 @@ func TestValidUUID(t *testing.T) {
 	mockCtrl.Finish()
 }
 
-func makeMockQueueAndDB(t *testing.T) (*gomock.Controller, *kinesisqueue.MockKinesisQueueInterface, *watch_position_db.MockWatchPositionDatabase) {
+func makeMockQueueAndDB(t *testing.T) (*gomock.Controller, *MockAw3DataWriter, *watch_position_db.MockWatchPositionDatabase) {
 	// Make a mock for the kinesis queue
 	mockCtrl := gomock.NewController(t)
-	mockQueue := kinesisqueue.NewMockKinesisQueueInterface(mockCtrl)
+	mockQueue := NewMockAw3DataWriter(mockCtrl)
 	mockDB := watch_position_db.NewMockWatchPositionDatabase(mockCtrl)
 	return mockCtrl, mockQueue, mockDB
 }
 
-func initRouterAndHandler(mockQueue kinesisqueue.KinesisQueueInterface, mockWatchDB watch_position_db.WatchPositionDatabase) (*mux.Router, *apple_watch_3_handler) {
+func initRouterAndHandler(mockQueue Aw3DataWriter, mockWatchDB watch_position_db.WatchPositionDatabase) (*mux.Router, *apple_watch_3_handler) {
 	router := mux.NewRouter()
 	handler := MakeAppleWatch3Handler(router, mockQueue, mockWatchDB)
 	return router, handler
