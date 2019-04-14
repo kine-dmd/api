@@ -4,20 +4,24 @@ import (
 	"sync"
 )
 
-type BinaryFileManager struct {
+type BinaryFileManager interface {
+	AppendToFile(filename string, data []byte) error
+}
+
+type LocalBinaryFileManager struct {
 	fileLocks  map[string]*sync.Mutex
 	mapLock    sync.RWMutex
 	fileWriter BinaryFileAppender
 }
 
-func MakeStandardBinaryFileManager() *BinaryFileManager {
+func MakeStandardBinaryFileManager() *LocalBinaryFileManager {
 	// Make a file manager using the standard write to file system
 	return MakeBinaryFileManager(new(osFileAppender))
 }
 
-func MakeBinaryFileManager(appender BinaryFileAppender) *BinaryFileManager {
+func MakeBinaryFileManager(appender BinaryFileAppender) *LocalBinaryFileManager {
 	// Make a file manager using the provided appender
-	manager := new(BinaryFileManager)
+	manager := new(LocalBinaryFileManager)
 	manager.fileWriter = appender
 
 	// Initialise locks
@@ -26,7 +30,7 @@ func MakeBinaryFileManager(appender BinaryFileAppender) *BinaryFileManager {
 	return manager
 }
 
-func (bfm *BinaryFileManager) AppendToFile(filename string, data []byte) error {
+func (bfm *LocalBinaryFileManager) AppendToFile(filename string, data []byte) error {
 	// Get a pointer to the relevant file lock
 	fileLock := bfm.getRelevantFileLock(filename)
 	fileLock.Lock()
@@ -36,7 +40,7 @@ func (bfm *BinaryFileManager) AppendToFile(filename string, data []byte) error {
 	return bfm.fileWriter.appendToFile(filename, data)
 }
 
-func (bfm *BinaryFileManager) getRelevantFileLock(filename string) *sync.Mutex {
+func (bfm *LocalBinaryFileManager) getRelevantFileLock(filename string) *sync.Mutex {
 	// Acquire the relevant locks - add them if necessary
 	bfm.mapLock.RLock()
 	fLock, exists := bfm.fileLocks[filename]
@@ -49,7 +53,7 @@ func (bfm *BinaryFileManager) getRelevantFileLock(filename string) *sync.Mutex {
 	return fLock
 }
 
-func (bfm *BinaryFileManager) addLockForFile(filename string) *sync.Mutex {
+func (bfm *LocalBinaryFileManager) addLockForFile(filename string) *sync.Mutex {
 	// Add a new lock for a new file. Need to be sure no-one else is trying to add same lock at same time
 	bfm.mapLock.Lock()
 	defer bfm.mapLock.Unlock()
