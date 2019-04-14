@@ -32,6 +32,7 @@ RUN vendor/bin/mockgen -destination=api_time/mock_time.go -package=api_time gith
 RUN vendor/bin/mockgen -destination=watch_position_db/mock_watch_pos_db.go  -package=watch_position_db github.com/kine-dmd/api/watch_position_db WatchPositionDatabase
 RUN vendor/bin/mockgen -destination=apple_watch_3/mock_data_writer.go  -package=apple_watch_3 github.com/kine-dmd/api/apple_watch_3 Aw3DataWriter
 RUN vendor/bin/mockgen -destination=binary_file_appender/mock_binary_file_appender.go  -package=binary_file_appender github.com/kine-dmd/api/binary_file_appender BinaryFileAppender
+RUN vendor/bin/mockgen -destination=binary_file_appender/mock_binary_file_manager.go  -package=binary_file_appender github.com/kine-dmd/api/binary_file_appender BinaryFileManager
 
 # Run all tests
 RUN go test -v ./...
