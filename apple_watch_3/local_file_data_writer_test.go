@@ -12,8 +12,8 @@ func TestCallsFileManager(t *testing.T) {
 	writer := MakeLocalFileDataWriter(mockFileManager)
 
 	// Make a standard fake data struct
-	unparsedDataStruct := makeFakeUnparsedDataStruct()
-	mockFileManager.EXPECT().AppendToFile("~/data/dmd01/leftHand.bin", []byte{1, 2}).Return(nil).Times(1)
+	unparsedDataStruct := makeFakeUnparsedDataStruct("dmd01", 1, []byte{1, 2})
+	mockFileManager.EXPECT().AppendToFile("~/data/dmd01/leftHand.bin", unparsedDataStruct.RawData).Return(nil).Times(1)
 
 	// Write the data
 	err := writer.writeData(unparsedDataStruct)
