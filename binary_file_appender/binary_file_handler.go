@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-type binary_file_appender interface {
+type BinaryFileAppender interface {
 	appendToFile(filename string, data []byte) error
 }
 
