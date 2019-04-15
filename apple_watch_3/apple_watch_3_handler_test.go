@@ -102,12 +102,51 @@ func TestValidUUID(t *testing.T) {
 	mockDB.EXPECT().GetWatchPosition(validUUID).Return(watch_position_db.WatchPosition{"dmd01", 1}, true).Times(1)
 
 	// Make and send a request with some data
-	body := bytes.NewReader([]byte{1, 2, 3})
+	body := bytes.NewReader(makeValidByteInput(1))
 	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/"+validUUID, body)
 	response := sendRequest(router, req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
 	mockCtrl.Finish()
+}
+
+func TestIncorrectLengthData(t *testing.T) {
+	// Exactly 0 things should be sent to the queue
+	validUUID := "00000000-0000-0000-0000-000000000000"
+	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
+	router, _ := initRouterAndHandler(mockQueue, mockDB)
+
+	// Make and send a request with some data
+	body := bytes.NewReader([]byte{1, 2, 3})
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/"+validUUID, body)
+	response := sendRequest(router, req)
+	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	mockCtrl.Finish()
+}
+
+func TestIncorrectLengthDataWithCorrectSetLength(t *testing.T) {
+	// Exactly 0 things should be sent to the queue
+	validUUID := "00000000-0000-0000-0000-000000000000"
+	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
+	router, _ := initRouterAndHandler(mockQueue, mockDB)
+
+	// Make and send a request with some data
+	body := bytes.NewReader([]byte{1, 2, 3})
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/"+validUUID, body)
+	req.ContentLength = ROW_SIZE_BYTES
+	response := sendRequest(router, req)
+	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	mockCtrl.Finish()
+}
+
+func makeValidByteInput(numRows int) []byte {
+	var watchData []byte
+	for i := 0; i < numRows; i++ {
+		watchData = append(watchData, make([]byte, 88)...)
+	}
+	return watchData
 }
 
 func makeMockQueueAndDB(t *testing.T) (*gomock.Controller, *MockAw3DataWriter, *watch_position_db.MockWatchPositionDatabase) {

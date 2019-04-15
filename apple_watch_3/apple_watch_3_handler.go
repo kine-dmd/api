@@ -62,6 +62,12 @@ func (aw3Handler apple_watch_3_handler) binaryHandler(writer http.ResponseWriter
 		return
 	}
 
+	// Check we have an integer number of rows
+	if len(data)%ROW_SIZE_BYTES != 0 {
+		http.Error(writer, "Non integer number of rows", http.StatusBadRequest)
+		return
+	}
+
 	// Get the watch position
 	position, exists := aw3Handler.watchDB.GetWatchPosition(watchId)
 	if !exists {
