@@ -10,3 +10,5 @@ type UnparsedAppleWatch3Data struct {
 type Aw3DataWriter interface {
 	writeData(data UnparsedAppleWatch3Data) error
 }
+
+const ROW_SIZE_BYTES = 88
