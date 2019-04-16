@@ -92,7 +92,7 @@ func TestSimulataneousWritesTakeSameTime(t *testing.T) {
 
 	// Time taken to run should be roughly equal due to same sleep time and parallel writes to separate files
 	timeDifference := (startTime.Sub(middleTime)) - (middleTime.Sub(endTime))
-	if timeDifference > time.Millisecond*10 {
+	if timeDifference > time.Millisecond*50 {
 		t.Fatalf("Writing to two files using mock files should take "+
 			"same amount of time as one. Took %f seconds longer", timeDifference.Seconds())
 	}
