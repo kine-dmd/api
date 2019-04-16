@@ -15,7 +15,7 @@ install:
   - echo "Nothing to install outside of container."
 
 script:
-  - docker build -t kine-dmd-api . $(printenv | grep -E '^IMAGE_' | sed 's/IMAGE_/--build-arg /g')
+  - docker build -t kine-dmd-api . $(printenv | grep -E '^IMAGE_' | sed 's/IMAGE_/--build-arg /g')  $(printenv | grep -E '^AWS_' | sed 's/^/--build-arg /')
 
 after_success:
   ./deploy.sh
