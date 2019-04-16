@@ -2,7 +2,13 @@ FROM golang:1.11.2-alpine3.8
 
 WORKDIR /go/src/github.com/kine-dmd/api/
 
+# Copy source files into the container (except those in .dockerignore)
 COPY . .
+
+# Add environment variables during build phase
+ARG AWS_DEFAULT_REGION
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
 
 # Remove old dependencies and mocks (should also be in dockerignore)
 RUN rm -rf vendor/ && rm -f **/mock*.go
