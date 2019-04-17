@@ -18,7 +18,7 @@ echo "Deploying services to production"
 docker --version
 $(aws ecr get-login --no-include-email --region eu-west-2) #needs AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
 
-docker build -t kine-dmd-api . $(printenv | grep -E '^IMAGE_' | sed 's/IMAGE_/--build-arg /g')  $(printenv | grep -E '^AWS_' | sed 's/^/--build-arg /')
+# Push the built version to AWS ECR (must be tagged during build and test phase)
 docker tag kine-dmd-api:latest 736634562271.dkr.ecr.eu-west-2.amazonaws.com/kine-dmd-api:latest
 docker push 736634562271.dkr.ecr.eu-west-2.amazonaws.com/kine-dmd-api:latest
 ecs-deploy -c $CLUSTER_NAME -n kine-dmd-api -i $IMAGE_REPO_URL:latest
