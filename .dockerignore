@@ -20,3 +20,7 @@ vendor/
 
 # JetBrains IDEs
 .idea/
+
+# Temporary local testing data
+watch_db/
+data/
