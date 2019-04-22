@@ -34,7 +34,7 @@ func TestScanCSVDatabase(t *testing.T) {
 	defer removeCSVFile()
 
 	// Make the table and take a scan of it
-	csvDB := MakeCSVWatchPositionDB()
+	csvDB := MakeCSVWatchPositionDB("watch_positions.csv")
 	scan := csvDB.GetTableScan()
 
 	// Use the standard compare results function

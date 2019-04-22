@@ -19,3 +19,7 @@ vendor/
 
 # Mocks
 **/mock*.go
+
+# Temporary local testing data
+watch_db/
+data/

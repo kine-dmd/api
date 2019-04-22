@@ -18,7 +18,7 @@ func MakeLocalFileDataWriter(manager binary_file_appender.BinaryFileManager) *lo
 
 func (writer localFileDataWriter) writeData(data UnparsedAppleWatch3Data) error {
 	// Settings for the storage of data
-	const basePath string = "~/data/"
+	const basePath string = "/data/"
 	limbPositions := []string{"rightHand", "leftHand", "rightLeg", "leftLeg"}
 
 	// Generate the file path

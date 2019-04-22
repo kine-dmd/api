@@ -12,9 +12,7 @@ type CSVWatchPositionDB struct {
 	filename string
 }
 
-func MakeCSVWatchPositionDB() *CSVWatchPositionDB {
-	const filename string = "watch_positions.csv"
-
+func MakeCSVWatchPositionDB(filename string) *CSVWatchPositionDB {
 	// Try and open the file to make sure it exists and we have access to it
 	file, err := os.Open(filename)
 	if err != nil {

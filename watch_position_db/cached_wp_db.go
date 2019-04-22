@@ -2,6 +2,7 @@ package watch_position_db
 
 import (
 	"github.com/kine-dmd/api/api_time"
+	"os"
 	"sync"
 	"time"
 )
@@ -16,8 +17,13 @@ type dynamoCachedWatchDB struct {
 	timeKeeper    api_time.ApiTime
 }
 
-func MakeStandardDynamoCachedWatchDB() *dynamoCachedWatchDB {
-	// Use a dynamo database and the standard system time
+func MakeStandardCachedWatchDB() *dynamoCachedWatchDB {
+	// If running locally, use a local DB
+	if os.Getenv("kine_dmd_api_location") == "local" {
+		return MakeCachedWatchDB(MakeCSVWatchPositionDB("/watch_db/watch_positions.csv"), api_time.SystemTime{})
+	}
+
+	// If running on AWS use Dynamo DB
 	return MakeCachedWatchDB(makeStandardDynamoWatchDatabase(), api_time.SystemTime{})
 }
 

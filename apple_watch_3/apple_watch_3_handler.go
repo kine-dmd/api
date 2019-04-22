@@ -7,25 +7,29 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 type apple_watch_3_handler struct {
-	queue   Aw3DataWriter
-	watchDB watch_position_db.WatchPositionDatabase
+	dataWriter Aw3DataWriter
+	watchDB    watch_position_db.WatchPositionDatabase
 }
 
 func MakeStandardAppleWatch3Handler(r *mux.Router) *apple_watch_3_handler {
-	// Open a kinesis queue & dynamo DB connection
-	queue := MakeStandardKinesisDataWriter()
-	watchDB := watch_position_db.MakeStandardDynamoCachedWatchDB()
+	// Always use a cached watch database
+	watchDB := watch_position_db.MakeStandardCachedWatchDB()
 
-	return MakeAppleWatch3Handler(r, queue, watchDB)
+	// Choose which data writer to use depending on local or AWS run
+	if os.Getenv("kine_dmd_api_location") == "local" {
+		return MakeAppleWatch3Handler(r, MakeStandardLocalFileDataWriter(), watchDB)
+	}
+	return MakeAppleWatch3Handler(r, MakeStandardKinesisDataWriter(), watchDB)
 }
 
 func MakeAppleWatch3Handler(r *mux.Router, queue Aw3DataWriter, watchDB watch_position_db.WatchPositionDatabase) *apple_watch_3_handler {
 	// Assign the databases
 	aw3Handler := new(apple_watch_3_handler)
-	aw3Handler.queue = queue
+	aw3Handler.dataWriter = queue
 	aw3Handler.watchDB = watchDB
 
 	// Pick a URL to handle
@@ -78,8 +82,8 @@ func (aw3Handler apple_watch_3_handler) binaryHandler(writer http.ResponseWriter
 	// Package the binary body together along with the watchId
 	structuredData := UnparsedAppleWatch3Data{WatchPosition: position, RawData: data}
 
-	// Send it to the relevant kinesis queue
-	err = aw3Handler.queue.writeData(structuredData)
+	// Send it to the relevant kinesis dataWriter
+	err = aw3Handler.dataWriter.writeData(structuredData)
 	if err != nil {
 		http.Error(writer, "Server unable to forward body", http.StatusInternalServerError)
 	}
