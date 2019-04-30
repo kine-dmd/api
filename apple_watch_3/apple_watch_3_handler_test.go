@@ -110,6 +110,27 @@ func TestValidUUID(t *testing.T) {
 	mockCtrl.Finish()
 }
 
+func TestWithFileID(t *testing.T) {
+	// Test parameters
+	validUUID := "00000000-0000-0000-0000-000000000000"
+	fileID := "1"
+
+	// Exactly 0 things should be sent to the queue
+	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
+	router, _ := initRouterAndHandler(mockQueue, mockDB)
+	mockQueue.EXPECT().writeData(gomock.Any()).Return(nil).Times(1)
+	mockDB.EXPECT().GetWatchPosition(validUUID).Return(watch_position_db.WatchPosition{"dmd01", 1}, true).Times(1)
+
+	// Make and send a request with some data
+	body := bytes.NewReader(makeValidByteInput(1))
+	url := "/upload/apple-watch-3/" + validUUID + "/" + fileID
+	req, _ := http.NewRequest("POST", url, body)
+	response := sendRequest(router, req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	mockCtrl.Finish()
+}
+
 func TestIncorrectLengthData(t *testing.T) {
 	// Exactly 0 things should be sent to the queue
 	validUUID := "00000000-0000-0000-0000-000000000000"
