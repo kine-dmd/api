@@ -35,7 +35,6 @@ func MakeAppleWatch3Handler(r *mux.Router, queue Aw3DataWriter, watchDB watch_po
 
 	// Pick a URL to handle
 	r.HandleFunc("/upload/apple-watch-3/{uuid}", aw3Handler.binaryHandler).Methods("POST")
-	r.HandleFunc("/upload/apple-watch-3/{uuid}/{fileNum}", aw3Handler.binaryHandler).Methods("POST")
 	return aw3Handler
 }
 
@@ -90,11 +89,9 @@ func (aw3Handler apple_watch_3_handler) binaryHandler(writer http.ResponseWriter
 		http.Error(writer, "Server unable to forward body", http.StatusInternalServerError)
 	}
 
-	// Return the file number if it exists
-	fileNum, ok := vars["fileNum"]
-	if ok {
-		_, _ = fmt.Fprintf(writer, fileNum)
-	}
+	// Return the file number (if it exists else return empty)
+	fileNum := request.Header.Get("Content-Disposition")
+	_, _ = fmt.Fprintf(writer, fileNum)
 }
 
 func isValidUUID(uid string) bool {

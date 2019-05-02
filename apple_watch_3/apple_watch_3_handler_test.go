@@ -5,6 +5,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/kine-dmd/api/watch_position_db"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -111,11 +112,8 @@ func TestValidUUID(t *testing.T) {
 }
 
 func TestWithFileID(t *testing.T) {
-	// Test parameters
-	validUUID := "00000000-0000-0000-0000-000000000000"
-	fileID := "1"
-
 	// Exactly 0 things should be sent to the queue
+	validUUID := "00000000-0000-0000-0000-000000000000"
 	mockCtrl, mockQueue, mockDB := makeMockQueueAndDB(t)
 	router, _ := initRouterAndHandler(mockQueue, mockDB)
 	mockQueue.EXPECT().writeData(gomock.Any()).Return(nil).Times(1)
@@ -123,11 +121,24 @@ func TestWithFileID(t *testing.T) {
 
 	// Make and send a request with some data
 	body := bytes.NewReader(makeValidByteInput(1))
-	url := "/upload/apple-watch-3/" + validUUID + "/" + fileID
-	req, _ := http.NewRequest("POST", url, body)
+	req, _ := http.NewRequest("POST", "/upload/apple-watch-3/"+validUUID, body)
+	fileID := "99"
+	req.Header.Set("Content-Disposition", fileID)
+
+	// Send the request and check the status code
 	response := sendRequest(router, req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
+	// Check the response matches the file ID
+	respBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		t.Fatalf("Unable to read response body: %s", err)
+	}
+
+	returnedFileID := string(respBytes)
+	if returnedFileID != fileID {
+		t.Fatalf("Returned file ID does not match sent. Expected %s got %s.", fileID, returnedFileID)
+	}
 	mockCtrl.Finish()
 }
 
