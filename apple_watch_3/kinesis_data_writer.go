@@ -23,7 +23,7 @@ func MakeKinesisDataWriter(queue kinesisqueue.KinesisQueueInterface) *kinesisDat
 
 func (kdw kinesisDataWriter) writeData(data UnparsedAppleWatch3Data) error {
 	// Kinesis cannot handle larger than 1MB. Deduct 30% to account for JSON encoding.
-	const sizeLimit int = 700000
+	const sizeLimit int = ROW_SIZE_BYTES * 8000
 
 	// Kinesis can only handle 1MB items
 	if len(data.RawData) > sizeLimit {
