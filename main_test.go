@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"testing"
 	"time"
@@ -8,7 +9,10 @@ import (
 
 func TestHealthHandler(t *testing.T) {
 	// Start server locally on new thread
-	go initialiseRouter(":8888")
+	go func() {
+		r := initialiseRouter()
+		log.Fatal(http.ListenAndServe(":8888", r))
+	}()
 
 	// Allow 2 seconds for the server to start before sending request
 	time.Sleep(2 * time.Second)
