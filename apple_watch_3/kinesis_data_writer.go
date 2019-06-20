@@ -8,14 +8,14 @@ type kinesisDataWriter struct {
 	queue kinesisqueue.KinesisQueueInterface
 }
 
-func MakeStandardKinesisDataWriter() *kinesisDataWriter {
+func makeStandardKinesisDataWriter() *kinesisDataWriter {
 	// Open a kinesis queue & dynamo DB connection
 	const STREAM_NAME = "apple-watch-3"
 	queue := kinesisqueue.MakeKinesisQueue(STREAM_NAME)
-	return MakeKinesisDataWriter(queue)
+	return makeKinesisDataWriter(queue)
 }
 
-func MakeKinesisDataWriter(queue kinesisqueue.KinesisQueueInterface) *kinesisDataWriter {
+func makeKinesisDataWriter(queue kinesisqueue.KinesisQueueInterface) *kinesisDataWriter {
 	dataWriter := new(kinesisDataWriter)
 	dataWriter.queue = queue
 	return dataWriter

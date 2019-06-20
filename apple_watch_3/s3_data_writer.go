@@ -13,13 +13,18 @@ const (
 )
 
 type s3DataWriter struct {
-	s3Conn *s3Connection.S3Connection
+	s3Conn s3Connection.S3Uploader
 }
 
-func MakeStandardS3DataWriter() *s3DataWriter {
+func makeStandardS3DataWriter() *s3DataWriter {
+	// Open a kinesis queue & dynamo DB connection
+	return makeS3DataWriter(s3Connection.MakeS3Connection())
+}
+
+func makeS3DataWriter(connection s3Connection.S3Uploader) *s3DataWriter {
 	// Open a kinesis queue & dynamo DB connection
 	s3dw := new(s3DataWriter)
-	s3dw.s3Conn = s3Connection.MakeS3Connection()
+	s3dw.s3Conn = connection
 	return s3dw
 }
 

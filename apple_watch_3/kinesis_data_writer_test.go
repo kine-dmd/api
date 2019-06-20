@@ -13,7 +13,7 @@ func TestSendingToQueue(t *testing.T) {
 	mockQueue.EXPECT().SendToQueue(watchData, watchData.WatchPosition.PatientID).Return(nil).Times(1)
 
 	// Make a kinesis data writer and send to it
-	kinesisDataWriter := MakeKinesisDataWriter(mockQueue)
+	kinesisDataWriter := makeKinesisDataWriter(mockQueue)
 	_ = kinesisDataWriter.writeData(watchData)
 
 	// Check expectations have been satisfied
@@ -27,7 +27,7 @@ func TestSplittingLargeItems(t *testing.T) {
 	mockQueue.EXPECT().SendToQueue(gomock.Any(), watchData.WatchPosition.PatientID).Return(nil).Times(2)
 
 	// Make a kinesis data writer and send to it
-	kinesisDataWriter := MakeKinesisDataWriter(mockQueue)
+	kinesisDataWriter := makeKinesisDataWriter(mockQueue)
 	_ = kinesisDataWriter.writeData(watchData)
 
 	// Check expectations have been satisfied
@@ -41,7 +41,7 @@ func TestTripleSplit(t *testing.T) {
 	mockQueue.EXPECT().SendToQueue(integerRowsMatcher{}, watchData.WatchPosition.PatientID).Return(nil).Times(3)
 
 	// Make a kinesis data writer and send to it
-	kinesisDataWriter := MakeKinesisDataWriter(mockQueue)
+	kinesisDataWriter := makeKinesisDataWriter(mockQueue)
 	_ = kinesisDataWriter.writeData(watchData)
 
 	// Check expectations have been satisfied
