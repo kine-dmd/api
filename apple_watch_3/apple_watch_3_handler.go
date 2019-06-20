@@ -24,7 +24,7 @@ func MakeStandardAppleWatch3Handler(r *mux.Router) *apple_watch_3_handler {
 	if os.Getenv("kine_dmd_api_location") == "local" {
 		return MakeAppleWatch3Handler(r, MakeStandardLocalFileDataWriter(), watchDB)
 	}
-	return MakeAppleWatch3Handler(r, MakeStandardS3DataWriter(), watchDB)
+	return MakeAppleWatch3Handler(r, makeStandardS3DataWriter(), watchDB)
 }
 
 func MakeAppleWatch3Handler(r *mux.Router, queue Aw3DataWriter, watchDB watch_position_db.WatchPositionDatabase) *apple_watch_3_handler {
