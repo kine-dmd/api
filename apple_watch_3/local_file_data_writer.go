@@ -6,11 +6,11 @@ type localFileDataWriter struct {
 	fileManager binary_file_appender.BinaryFileManager
 }
 
-func MakeStandardLocalFileDataWriter() *localFileDataWriter {
-	return MakeLocalFileDataWriter(binary_file_appender.MakeStandardBinaryFileManager())
+func makeStandardLocalFileDataWriter() *localFileDataWriter {
+	return makeLocalFileDataWriter(binary_file_appender.MakeStandardBinaryFileManager())
 }
 
-func MakeLocalFileDataWriter(manager binary_file_appender.BinaryFileManager) *localFileDataWriter {
+func makeLocalFileDataWriter(manager binary_file_appender.BinaryFileManager) *localFileDataWriter {
 	writer := new(localFileDataWriter)
 	writer.fileManager = manager
 	return writer

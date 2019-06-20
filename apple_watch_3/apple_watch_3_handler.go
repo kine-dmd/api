@@ -22,7 +22,7 @@ func MakeStandardAppleWatch3Handler(r *mux.Router) *apple_watch_3_handler {
 
 	// Choose which data writer to use depending on local or AWS run
 	if os.Getenv("kine_dmd_api_location") == "local" {
-		return MakeAppleWatch3Handler(r, MakeStandardLocalFileDataWriter(), watchDB)
+		return MakeAppleWatch3Handler(r, makeStandardLocalFileDataWriter(), watchDB)
 	}
 	return MakeAppleWatch3Handler(r, makeStandardS3DataWriter(), watchDB)
 }

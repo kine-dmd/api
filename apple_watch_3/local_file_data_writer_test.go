@@ -9,7 +9,7 @@ import (
 func TestCallsFileManager(t *testing.T) {
 	// Make mocks and local file data writer
 	mockCtrl, mockFileManager := makeFileManagerMocks(t)
-	writer := MakeLocalFileDataWriter(mockFileManager)
+	writer := makeLocalFileDataWriter(mockFileManager)
 
 	// Make a standard fake data struct
 	unparsedDataStruct := makeFakeUnparsedDataStruct("dmd01", 1, []byte{1, 2})
