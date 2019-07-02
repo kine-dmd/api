@@ -86,7 +86,7 @@ func (aw3Handler apple_watch_3_handler) binaryHandler(writer http.ResponseWriter
 	// Send it to the relevant kinesis dataWriter
 	err = aw3Handler.dataWriter.writeData(structuredData)
 	if err != nil {
-		log.Printf("Server error forwarding data to Kinesis. %s \n", err)
+		log.Printf("Server error forwarding data. %s \n", err)
 		http.Error(writer, "Server unable to forward body", http.StatusInternalServerError)
 	}
 
