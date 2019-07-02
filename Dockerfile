@@ -16,12 +16,12 @@ RUN rm -rf vendor/ && rm -f **/mock*.go
 # Expose the web port
 EXPOSE 80
 
-# Add C dependensies required by Go runtime
+# Add C dependencies required by Go runtime
 RUN apk add --no-cache git
 RUN apk add --no-cache gcc
 RUN apk add --no-cache libc-dev
 
-# Intstall Go Dep package manager
+# Install Go Dep package manager
 RUN wget -O dep https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64
 RUN echo '287b08291e14f1fae8ba44374b26a2b12eb941af3497ed0ca649253e21ba2f83  dep' | sha256sum -c -
 RUN chmod +x dep
